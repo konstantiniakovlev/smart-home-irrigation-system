@@ -1,5 +1,5 @@
 **.env
 **/.idea
-**/.config
+**/config.py
 **/.build
 **/__pycache__/**
