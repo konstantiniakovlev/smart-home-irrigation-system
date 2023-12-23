@@ -7,14 +7,14 @@ from pydantic import BaseModel
 RELAY_ON = "/relay/on"
 
 
-def get_device_params(device_id: Union[int, str]):
+def get_device_params(device_id: Union[int, str]) -> dict:
     for param_config in config.DEVICE_PARAMETER_CONFIGS:
         if param_config["id"] == int(device_id):
             return param_config
     raise HTTPException(status_code=404, detail="Device not found")
 
 
-def get_params(device_params: dict, duration: int = None):
+def get_params(device_params: dict, duration: int = None) -> dict:
 
     if duration is not None:
         params = {"duration": duration}
@@ -30,7 +30,7 @@ def get_response(
         url: str,
         params: Optional[dict] = None,
         request_type: Optional[str] = "get"
-):
+) -> requests.Response:
     request = requests.get
     request = requests.post if request_type == "post" else request
 
@@ -48,6 +48,23 @@ def get_response(
 
 app = FastAPI(**config.APP_PARAMETER_CONFIGS)
 
+@app.get(
+    path="/devices/",
+    summary="Get Configuration Parameters of Every Device",
+    description="Receive configuration parameters for all devices currently set up in house."
+)
+def return_devices() -> dict:
+    return config.DEVICE_PARAMETER_CONFIGS
+
+
+@app.get(
+    path="/devices/{device_id}/",
+    summary="Get Configuration Parameters of Single Device",
+    description="Receive configuration parameters for one specified device currently set up in house."
+)
+def return_devices(device_id: Union[int, str]) -> dict:
+    return get_device_params(device_id)
+
 
 @app.get(
     path="/devices/{device_id}/run/",
@@ -57,7 +74,7 @@ app = FastAPI(**config.APP_PARAMETER_CONFIGS)
 def run_pump(
         device_id: Union[int, str],
         duration: int = None
-):
+) -> dict:
     device_params = get_device_params(device_id)
     params = get_params(device_params, duration)
 
@@ -73,7 +90,7 @@ def run_pump(
     summary="Run All Devices Simultaneously",
     description="Run all pumps for specified or optimal amount of time."
 )
-def run_all_pumps(duration: int = None):
+def run_all_pumps(duration: int = None) -> (int, dict):
     responses = []
     for device_params in config.DEVICE_PARAMETER_CONFIGS:
         params = get_params(device_params, duration)
