@@ -21,7 +21,6 @@ class PicoAPI:
 
     def _get_response(self, request_url, headers):
         response = {
-            "object_id": self.pump.obj_id,
             "name": self.pump.name,
             "status": "not active",
             "time_active": 0
@@ -34,7 +33,7 @@ class PicoAPI:
 
         return json.dumps(response)
 
-    def expose(self):
+    def run(self):
         self._create_socket()
 
         while True:

@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM --platform=linux/arm/v8 python:3.9 as build
 LABEL authors="Konstantin"
 
 COPY requirements.txt .

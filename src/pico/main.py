@@ -1,20 +1,22 @@
-from utils.connection import connect
-from helpers.pico import Pump
+from helpers.pico import Pico, Pump
 from helpers.api import PicoAPI
-
-PORT = 80
+from utils import config
 
 
 def main():
-    pump = Pump(obj_id=PORT, name="water pump")
 
-    status = connect()
+    pico = Pico()
+    pico.connect()
+    pico.register()
+
+    pump = Pump(name="Water Pump")
+
     api = PicoAPI(
         ctrl_ent=pump,
         host="0.0.0.0",
-        port=PORT
-    )
-    api.expose()
+        port=config.PICO_PORT
+    )  # todo: parse request, create response
+    api.run()
 
 
 def test():
