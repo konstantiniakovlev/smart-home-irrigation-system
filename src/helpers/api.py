@@ -1,12 +1,13 @@
+import requests
+
 from fastapi import FastAPI, HTTPException
 from typing import Union, Optional
-import requests
 from pydantic import BaseModel, Field
+
 from utils.app_config import *
 from utils.queries import *
 from helpers.db import DataBase
 
-RELAY_ON = "relay/on"
 DEVICES_TAG = "Devices"
 
 
@@ -72,12 +73,15 @@ def run_all_pumps(duration: int = None) -> list:
     for idx in range(len(device_params)):
         ip_address = device_params[idx].get('ip_address', '/32').split('/')[0]
         port = device_params[idx].get('port', '')
+        device_id = device_params[idx].get('device_id', '')
 
         base_url = f"http://{ip_address}:{port}/"
-        url = base_url + RELAY_ON
+        url = base_url + "relay/on"
 
         response = get_api_response(url=url, params=params[idx])
-        responses.append(response.json())
+        response_dict = response.json()
+        response_dict["device_id"] = int(device_id)
+        responses.append(response_dict)
 
     return responses
 
@@ -114,10 +118,12 @@ def run_pump(
     port = device_params.get('port', '')
 
     base_url = f"http://{ip_address}:{port}/"
-    url = base_url + RELAY_ON
+    url = base_url + "relay/on"
 
     response = get_api_response(url=url, params=params)
-    return response.json()
+    response_dict = response.json()
+    response_dict["device_id"] = int(device_id)
+    return response_dict
 
 
 class DeviceInfo(BaseModel):
@@ -135,7 +141,7 @@ class DeviceInfo(BaseModel):
     description="Register the device using their mac address. If the address already exists, other fields will be updated.",
     tags=[DEVICES_TAG]
 )
-def register_device(payload: DeviceInfo) -> int:
+def register_device(payload: DeviceInfo) -> dict:
     db = DataBase(name="smart-home-postgres")
 
     rd_query = register_device_query % {
@@ -155,4 +161,4 @@ def register_device(payload: DeviceInfo) -> int:
     get_db_response(db, rp_query, fetch=False, commit=True)
     db.close()
 
-    return device_id
+    return {"device_id": device_id}

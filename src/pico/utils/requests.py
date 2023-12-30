@@ -21,3 +21,5 @@ def send_request(url, params=None, json=None, method="get"):
 
     if response.status_code not in [200, 201]:
         raise Exception(f"{response.status_code}, {response.content}")
+
+    return response
