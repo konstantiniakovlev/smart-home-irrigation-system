@@ -2,8 +2,9 @@ import machine
 import network
 import time
 import ubinascii
-import urequests as requests
+
 from utils import config
+from utils import requests
 
 
 class Pico:
@@ -20,32 +21,33 @@ class Pico:
         self.wlan.active(True)
         self.wlan.connect(config.WIFI_SSID, config.WIFI_PWD)
 
+        self._await_connection()
+        self._check_connection()
+
+        self.status = "connected"
+        self.ip_addr, _, _, _ = self.wlan.ifconfig()
+        self.mac_addr = ubinascii.hexlify(self.wlan.config("mac"), ":").decode()
+        print("Connected inet", self.ip_addr)
+
+    def register(self):
+        self._check_connection()
+        self.wlan.active(True)
+
+        url = requests.create_url(endpoint="/devices/register/")
+        payload = self._create_payload()
+        requests.send_request(url=url, json=payload, method="post")
+
+    def _await_connection(self):
         for _ in range(config.TIMEOUT_TIME):
             if self.wlan.isconnected():
                 break
             time.sleep(1)
 
+    def _check_connection(self):
         if not self.wlan.isconnected():
-            raise Exception(
-                "TimeoutError, pico was not able to connect to network."
-            )
+            raise Exception("TimeoutError, pico was not able to connect to network.")
 
-        self.status = "connected"
-        self.ip_addr, _, _, _ = self.wlan.ifconfig()
-        print("Connected inet", self.ip_addr)
-
-    def register(self):
-        if not self.wlan.isconnected():
-            print("Device is not connected to network. Connect before registering device.")
-
-        self.wlan.active(True)
-        self.mac_addr = ubinascii.hexlify(
-            self.wlan.config("mac"),
-            ":"
-        ).decode()
-
-        base_url = f"http://{config.CONTROLLER_HOST}:{config.CONTROLLER_PORT}"
-        url = base_url + "/devices/register/"
+    def _create_payload(self):
         payload = {
             "mac_address": self.mac_addr,
             "ip_address": self.ip_addr,
@@ -54,9 +56,7 @@ class Pico:
             "device_description": "Microcontroller with relay",
             "program_description": "Irrigation pump with moisture sensor"
         }
-        response = requests.post(url=url, json=payload)
-        if response.status_code not in [200, 201]:
-            raise Exception(f"{response.status_code}, {response.content}")
+        return payload
 
 
 class Pump:
@@ -64,16 +64,17 @@ class Pump:
     def __init__(self, name=None):
         self.name = name
         self._configure_hardware()
+        self._set_initial_state()
 
     def _configure_hardware(self):
         self.led = machine.Pin("LED", machine.Pin.OUT)
         self.relay = machine.Pin(16, machine.Pin.OUT)
 
+    def _set_initial_state(self):
         self.led.off()
         self.relay.value(1)
 
     def water(self, water_time):
-
         self.led.on()
         self.relay.value(0)
 

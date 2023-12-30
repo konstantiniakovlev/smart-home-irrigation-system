@@ -4,19 +4,14 @@ from utils import config
 
 
 def main():
-
     pico = Pico()
+    pump = Pump(name="Water Pump")
+    api = PicoAPI(ctrl_ent=pump)
+
     pico.connect()
     pico.register()
 
-    pump = Pump(name="Water Pump")
-
-    api = PicoAPI(
-        ctrl_ent=pump,
-        host="0.0.0.0",
-        port=config.PICO_PORT
-    )  # todo: parse request, create response
-    api.run()
+    api.run(host="0.0.0.0", port=config.PICO_PORT)
 
 
 def test():
