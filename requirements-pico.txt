@@ -1,0 +1,6 @@
+# pico command line tools
+adafruit-ampy==1.0.7
+rshell==0.0.31
+# pico dependencies
+pyserial==3.5
+docopt==0.6.2
