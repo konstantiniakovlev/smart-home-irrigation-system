@@ -1,6 +1,7 @@
 import psycopg2
 from psycopg2 import extras
-from utils import config
+
+from utils.config import get_config_params
 
 
 class DataBase:
@@ -10,7 +11,7 @@ class DataBase:
             name="smart-home-postgres",
     ):
         self.name = name
-        self.config_params = self._get_config_params()
+        self.config_params = get_config_params(self.name)
         self.connection, self.cursor = self._connect()
 
     def execute(self, query, fetch, commit=False):
@@ -22,13 +23,6 @@ class DataBase:
     def close(self):
         self.cursor.close()
         self.connection.close()
-
-    def _get_config_params(self):
-        if self.name == "smart-home-postgres":
-            return config.POSTGRES_DB_CONfIGS
-
-        if self.name == "smart-home-timescaledb":
-            return config.TIMESCALE_DB_CONFIGS
 
     def _connect(self):
         try:

@@ -1,0 +1,37 @@
+services:
+  api:
+    image: ${SERVICE_NAME}:${VERSION}
+    build: .
+    container_name: ${SERVICE_NAME}
+    env_file:
+      - ./config/.api.env
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+
+  postgresdb:
+    image: postgres:16.1
+    container_name: smart-home-postgres
+    env_file:
+      - ./config/.postgres.env
+    restart: unless-stopped
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./sql/init-postgres.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+#  timescaledb:
+#    image: timescale/timescaledb:latest-pg16
+#    container_name: smart-home-timescaledb
+#    env_file:
+#      - ./config/.timescaledb.env
+#    restart: unless-stopped
+#    volumes:
+#      - ./data:/var/lib/postgresql/data
+#      - ./sql/init-timescale.sql:/docker-entrypoint-initdb.d/init.sql
+#    ports:
+#      - "5431:5432"

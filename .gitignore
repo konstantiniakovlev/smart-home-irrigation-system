@@ -1,5 +1,5 @@
 **.env
 **/.idea
-*config.py
-**/.build
+**/pico/utils/config.py
 **/__pycache__/**
+**/data/
