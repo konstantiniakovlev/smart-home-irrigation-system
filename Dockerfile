@@ -4,7 +4,7 @@ LABEL authors="Konstantin"
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-COPY src/. src/.
+COPY src/app/. .
 
 
-CMD ["python", "src/main.py"]
+CMD ["python", "main.py"]
